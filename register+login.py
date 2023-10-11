@@ -213,7 +213,182 @@ class Ui_MainWindow(object):
             self.showPasswordButton.setIcon(icon)
             self.passwordEntry.setEchoMode(QtWidgets.QLineEdit.Normal)
 
+class Ui_ForgetPasswordWindow(object):
+    def setupUi(self, ForgetPasswordWindow):
+        ForgetPasswordWindow.setObjectName("ForgetPasswordWindow")
+        ForgetPasswordWindow.resize(1020, 570)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(ForgetPasswordWindow.sizePolicy().hasHeightForWidth())
+        ForgetPasswordWindow.setSizePolicy(sizePolicy)
+        ForgetPasswordWindow.setAutoFillBackground(False)
+        self.centralwidget = QtWidgets.QWidget(ForgetPasswordWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.label = QtWidgets.QLabel(self.centralwidget)
+        self.label.setGeometry(QtCore.QRect(0, 0, 1021, 571))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy)
+        self.label.setStyleSheet("background-image: url(:/newPrefix/tourism kiosk/penang tour.png);")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(120, 60, 381, 461))
+        self.frame.setStyleSheet("background-color: qconicalgradient(cx:0, cy:0, angle:0, stop:0.511364 rgba(0, 156, 221, 255), stop:1 rgba(255, 255, 255, 255));\n"
+"border-radius: 60px;")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.emailEntry = QtWidgets.QLineEdit(self.frame)
+        self.emailEntry.setGeometry(QtCore.QRect(40, 70, 301, 31))
+        self.emailEntry.setStyleSheet("background-color: rgb(255, 255, 255);\n"
+"font: 15pt \"Arial\";\n"
+"border-radius: 11px;\n"
+"")
+        self.emailEntry.setText("")
+        self.emailEntry.setObjectName("emailEntry")
+        self.saveButton = QtWidgets.QPushButton(self.frame)
+        self.saveButton.setGeometry(QtCore.QRect(130, 370, 111, 41))
+        self.saveButton.setStyleSheet("/* Set the button\'s style */\n"
+"QPushButton {\n"
+"    background-color: rgb(88, 145, 167); \n"
+"    font: 14pt \"Arial Rounded MT Bold\";\n"
+"    color: rgb(255, 255, 255);\n"
+"    border-radius: 20px;\n"
+"}\n"
+"\n"
+"/* Change the cursor when hovering */\n"
+"QPushButton:hover {\n"
+"    background-color: rgb(0, 0, 132);\n"
+"    cursor: pointer; /* Change cursor to a pointing hand */\n"
+"}\n"
+"\n"
+"")
+        self.saveButton.setObjectName("saveButton")
+        self.verificationLabel = QtWidgets.QLabel(self.frame)
+        self.verificationLabel.setGeometry(QtCore.QRect(40, 120, 181, 31))
+        self.verificationLabel.setStyleSheet("background-color: transparent;\n"
+"font: 16pt \"Arial Rounded MT Bold\";")
+        self.verificationLabel.setObjectName("verificationLabel")
+        self.errorMessageLabel = QtWidgets.QLabel(self.frame)
+        self.errorMessageLabel.setGeometry(QtCore.QRect(30, 421, 321, 41))
+        self.errorMessageLabel.setStyleSheet("background-color: transparent;\n"
+"color: rgb(255, 0, 0);\n"
+"font: 16pt \"Arial Rounded MT Bold\";")
+        self.errorMessageLabel.setObjectName("errorMessageLabel")
+        self.emailLabel = QtWidgets.QLabel(self.frame)
+        self.emailLabel.setGeometry(QtCore.QRect(30, 40, 91, 31))
+        self.emailLabel.setStyleSheet("background-color: transparent;\n"
+"font: 16pt \"Arial Rounded MT Bold\";")
+        self.emailLabel.setObjectName("emailLabel")
+        self.verificationEntry = QtWidgets.QLineEdit(self.frame)
+        self.verificationEntry.setGeometry(QtCore.QRect(40, 150, 211, 31))
+        self.verificationEntry.setStyleSheet("background-color: rgb(255, 255, 255);\n"
+"font: 15pt \"Arial\";\n"
+"border-radius: 11px;\n"
+"")
+        self.verificationEntry.setText("")
+        self.verificationEntry.setObjectName("verificationEntry")
+        self.newpasswordLabel = QtWidgets.QLabel(self.frame)
+        self.newpasswordLabel.setGeometry(QtCore.QRect(30, 190, 181, 51))
+        self.newpasswordLabel.setStyleSheet("background-color: transparent;\n"
+"font: 16pt \"Arial Rounded MT Bold\";")
+        self.newpasswordLabel.setObjectName("newpasswordLabel")
+        self.newpasswordEntry = QtWidgets.QLineEdit(self.frame)
+        self.newpasswordEntry.setGeometry(QtCore.QRect(40, 230, 301, 31))
+        self.newpasswordEntry.setStyleSheet("background-color: rgb(255, 255, 255);\n"
+"font: 15pt \"Arial\";\n"
+"border-radius: 11px;\n"
+"")
+        self.newpasswordEntry.setText("")
+        self.newpasswordEntry.setObjectName("newpasswordEntry")
+        self.sendButton = QtWidgets.QPushButton(self.frame)
+        self.sendButton.setGeometry(QtCore.QRect(270, 150, 71, 31))
+        self.sendButton.setStyleSheet("/* Set the button\'s style */\n"
+"QPushButton {\n"
+"    background-color: rgb(88, 145, 167); \n"
+"    font: 12pt \"Arial Rounded MT Bold\";\n"
+"    color: rgb(255, 255, 255);\n"
+"    border-radius: 13px;\n"
+"}\n"
+"\n"
+"/* Change the cursor when hovering */\n"
+"QPushButton:hover {\n"
+"    background-color: rgb(0, 0, 132);\n"
+"    cursor: pointer; /* Change cursor to a pointing hand */\n"
+"}\n"
+"\n"
+"")
+        self.sendButton.setObjectName("sendButton")
+        self.confirmpasswordLabel = QtWidgets.QLabel(self.frame)
+        self.confirmpasswordLabel.setGeometry(QtCore.QRect(20, 280, 231, 31))
+        self.confirmpasswordLabel.setStyleSheet("background-color: transparent;\n"
+"font: 16pt \"Arial Rounded MT Bold\";")
+        self.confirmpasswordLabel.setObjectName("confirmpasswordLabel")
+        self.confirmpasswordEntry = QtWidgets.QLineEdit(self.frame)
+        self.confirmpasswordEntry.setGeometry(QtCore.QRect(40, 310, 301, 31))
+        self.confirmpasswordEntry.setStyleSheet("background-color: rgb(255, 255, 255);\n"
+"font: 15pt \"Arial\";\n"
+"border-radius: 11px;\n"
+"")
+        self.confirmpasswordEntry.setText("")
+        self.confirmpasswordEntry.setObjectName("confirmpasswordEntry")
+        self.planeimg = QtWidgets.QPushButton(self.centralwidget)
+        self.planeimg.setGeometry(QtCore.QRect(830, 30, 171, 101))
+        self.planeimg.setStyleSheet("background-color: transparent;")
+        self.planeimg.setText("")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("C:\\Users\\s\\Desktop\\tourism kiosk/travelplane.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.planeimg.setIcon(icon)
+        self.planeimg.setIconSize(QtCore.QSize(150, 150))
+        self.planeimg.setObjectName("planeimg")
+        self.penangimg = QtWidgets.QPushButton(self.centralwidget)
+        self.penangimg.setGeometry(QtCore.QRect(810, 470, 201, 101))
+        self.penangimg.setStyleSheet("background-color: transparent;")
+        self.penangimg.setText("")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap("C:\\Users\\s\\Desktop\\tourism kiosk/letstravel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.penangimg.setIcon(icon1)
+        self.penangimg.setIconSize(QtCore.QSize(200, 200))
+        self.penangimg.setObjectName("penangimg")
+        self.backButton = QtWidgets.QPushButton(self.centralwidget)
+        self.backButton.setGeometry(QtCore.QRect(40, 20, 51, 51))
+        self.backButton.setStyleSheet("\n"
+"QPushButton {\n"
+"    background-color: rgb(255, 255, 255);\n"
+"    border-radius: 25px;\n"
+"}\n"
+"\n"
+"/* Change the cursor when hovering */\n"
+"QPushButton:hover {\n"
+"    background-color:rgb(0, 0, 127);\n"
+"    cursor: pointer; /* Change cursor to a pointing hand */\n"
+"}\n"
+"")
+        self.backButton.setText("")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap("C:\\Users\\s\\Desktop\\tourism kiosk/back.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.backButton.setIcon(icon2)
+        self.backButton.setIconSize(QtCore.QSize(50, 50))
+        self.backButton.setObjectName("backButton")
+        ForgetPasswordWindow.setCentralWidget(self.centralwidget)
 
+        self.retranslateUi(ForgetPasswordWindow)
+        QtCore.QMetaObject.connectSlotsByName(ForgetPasswordWindow)
+
+    def retranslateUi(self, ForgetPasswordWindow):
+        _translate = QtCore.QCoreApplication.translate
+        ForgetPasswordWindow.setWindowTitle(_translate("ForgetPasswordWindow", "Forget Password"))
+        self.saveButton.setText(_translate("ForgetPasswordWindow", "Save"))
+        self.verificationLabel.setText(_translate("ForgetPasswordWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt; font-weight:600;\">Verification code</span></p></body></html>"))
+        self.errorMessageLabel.setText(_translate("ForgetPasswordWindow", "<html><head/><body><p align=\"center\"><br/></p></body></html>"))
+        self.emailLabel.setText(_translate("ForgetPasswordWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt; font-weight:600;\">Email</span></p></body></html>"))
+        self.newpasswordLabel.setText(_translate("ForgetPasswordWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt; font-weight:600;\">New Password</span></p></body></html>"))
+        self.sendButton.setText(_translate("ForgetPasswordWindow", "Send"))
+        self.confirmpasswordLabel.setText(_translate("ForgetPasswordWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt; font-weight:600;\">Confirm Password</span></p></body></html>"))
 
 class Ui_RegistrationWindow(object):
     def setupUi(self, RegistrationWindow):
@@ -375,6 +550,27 @@ class Ui_RegistrationWindow(object):
         self.emailLabel.setText(_translate("RegistrationWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt; font-weight:600;\">Email</span></p></body></html>"))
         self.cityLabel.setText(_translate("RegistrationWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt; font-weight:600;\">City</span></p></body></html>"))
 
+class ForgetPasswordWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_ForgetPasswordWindow()
+        self.ui.setupUi(self)
+        email = self.ui.emailEntry.text()
+        verificationcode=self.ui.verificationEntry.text()
+        newpasword = self.ui.newpasswordEntry.text()
+        confirmpassword = self.ui.confirmpasswordEntry.text()
+
+        self.ui.sendButton.clicked.connect(self.send)
+        self.ui.saveButton.clicked.connect(self.save)
+
+    def send(self):
+        #implement verification logic
+        pass
+
+    def save(self):
+        #implement resetpassword logic
+        pass
+
 class LoginWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -383,6 +579,8 @@ class LoginWindow(QtWidgets.QMainWindow):
 
         # Connect the login button to the login function
         self.ui.loginButton.clicked.connect(self.login)
+
+        self.ui.forgetPasswordButton.clicked.connect(self.show_forgetpassword_window)
 
         # Connect the registration button to show the registration window
         self.ui.registrationButton.clicked.connect(self.show_registration_window)
@@ -404,13 +602,22 @@ class LoginWindow(QtWidgets.QMainWindow):
 
     def show_registration_window(self):
         self.registration_window = RegistrationWindow()
-        self.registration_window.ui.backButton.clicked.connect(self.show_login_window)
+        self.registration_window.ui.backButton.clicked.connect(self.close_registration_window)
         self.registration_window.show()
         self.hide()
 
-    def show_login_window(self):
-        self.show()
+    def show_forgetpassword_window(self):
+        self.forgetpassword_window = ForgetPasswordWindow()
+        self.forgetpassword_window.ui.backButton.clicked.connect(self.close_forgetpassword_window)
+        self.forgetpassword_window.show()
+        self.hide()
+
+    def close_registration_window(self):
         self.registration_window.close()
+        self.show()
+    def close_forgetpassword_window(self):
+        self.forgetpassword_window.close()
+        self.show()
 
 class RegistrationWindow(QtWidgets.QMainWindow):
     def __init__(self):
