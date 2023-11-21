@@ -2,6 +2,8 @@ import mysql.connector
 import hashlib
 import test_rc,re
 from PyQt5 import QtCore, QtGui, QtWidgets
+from side_bar_ui import MainWindow
+from admin_ui_desmond import Ui_MainWindow as admin_Ui_MainWindow
 
 def connect_to_database():
     try:
@@ -15,6 +17,12 @@ def connect_to_database():
     except mysql.connector.Error as err:
         print(f"Error connecting to the database: {err}")
         return None
+
+class NewWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.ui = admin_Ui_MainWindow()
+        self.ui.setupUi(self)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -567,7 +575,7 @@ class LoginWindow(QtWidgets.QMainWindow):
 
         self.ui.forgetPasswordButton.clicked.connect(self.show_forgetpassword_window)
 
-        # Connect the registration button to show the registration window
+        # Connect the registration button to show the registration windows
         self.ui.registrationButton.clicked.connect(self.show_registration_window)
 
     def login(self):
@@ -593,10 +601,25 @@ class LoginWindow(QtWidgets.QMainWindow):
         cursor.execute(query, (username, hashed_password))
         user = cursor.fetchone()
 
-        if user is not None:
+        if username == "admin" and password == "adminpassword":
+            # Admin login successful
+            self.ui.errorMessageLabel.setText("Admin login successful")
+
+            # Call the method to open the admin page
+            self.admin_ui = NewWindow()
+            self.admin_ui.show()
+            self.close()
+        elif user is not None:
             # Clear the error message if credentials are valid
             self.ui.errorMessageLabel.setText("Login successful")
-            # Perform any other actions you want upon successful login
+
+            # Get the user ID from the fetched user record
+            user_id = user[0]  # Assuming the user ID is in the first column
+
+            # Call the method to open the main page and pass the user ID
+            self.main_window = MainWindow(user_id=user_id)  # Pass the user_id parameter
+            self.main_window.show()
+            self.close()
         else:
             # Display an error message if credentials are invalid
             error_message = "Invalid username or password. Please try again."
@@ -671,7 +694,7 @@ class RegistrationWindow(QtWidgets.QMainWindow):
                 hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
                 # Insert the user data into the User table
-                query = "INSERT INTO User (user_name, Password, email, city) VALUES (%s, %s, %s, %s)"
+                query = "INSERT INTO User (user_name, Password, email, area) VALUES (%s, %s, %s, %s)"
                 cursor.execute(query, (username, hashed_password, email, city))
 
                 # Commit the changes to the database
@@ -832,15 +855,3 @@ if __name__ == "__main__":
     login_window = LoginWindow()
     login_window.show()
     sys.exit(app.exec_())
-
-
-
-
-
-
-
-
-
-
-
-

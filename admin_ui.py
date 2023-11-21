@@ -1,17 +1,21 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QFileDialog, QLabel
-from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtGui import QPixmap, QImage,QFont
 import mysql.connector
 import base64
 from functools import partial
+import os
 
+
+
+common_font = QFont("Arial", 12)
 
 def connect_to_database():
     connection = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="desmond1234",
+        password="steven1234",
         database="tourism information kiosk"
     )
     if connection.is_connected():
@@ -31,6 +35,7 @@ def fetch_data_from_database(connection):
             FROM attractions AS a
             LEFT JOIN image AS i ON a.attractions_id = i.attractions_id
             LEFT JOIN category AS c ON a.category_id = c.category_id
+            WHERE i.image_type = 'Main'
             """
             cursor.execute(query)
             data = cursor.fetchall()
@@ -107,13 +112,10 @@ def update_deals_to_database(deals_id, deals_name, deals_description, promocode,
 
 
 def update_image_in_database(deals_id, image_data):
-    # Establish a database connection
     db_connection = connect_to_database()
-
     if db_connection:
         # Create a cursor
         cursor = db_connection.cursor()
-
         # Check if there is already an image record for the given deals_id
         cursor.execute("SELECT * FROM image WHERE deals_id = %s", (deals_id,))
         existing_image = cursor.fetchone()
@@ -126,8 +128,7 @@ def update_image_in_database(deals_id, image_data):
                 update_image_query = """
                 UPDATE image
                 SET image_data = %s
-                WHERE deals_id = %s
-                """
+                WHERE deals_id = %s """
                 cursor.execute(update_image_query, (image_data, deals_id))
         else:
             # If no image record exists, insert a new record
@@ -138,7 +139,6 @@ def update_image_in_database(deals_id, image_data):
 
         # Commit the changes to the database
         db_connection.commit()
-
         # Close the cursor and the database connection
         cursor.close()
         db_connection.close()
@@ -218,42 +218,40 @@ def fetch_options_from_database(db_connection):
 
 
 class Ui_MainWindow(object):
-    def save_data_from_frame_to_database(self, new_frame):
+
+    def save_data_from_frame_to_database(self, new_frame, text_edit2, text_edit_3, text_edit_4, small_text_edit,
+                                         new_text_edit_2):
         try:
             # Get the data from the widgets in the new frame
-            text_edit2 = new_frame.findChild(QtWidgets.QTextEdit, "text_edit2")
             text_to_save_text_edit2 = text_edit2.toPlainText()
-
-            text_edit_3 = new_frame.findChild(QtWidgets.QTextEdit, "text_edit_3")
             text_to_save_text_edit_3 = text_edit_3.toPlainText()
-
-            text_edit_4 = new_frame.findChild(QtWidgets.QTextEdit, "text_edit_4")
             text_to_save_text_edit_4 = text_edit_4.toPlainText()
-
-            small_text_edit = new_frame.findChild(QtWidgets.QTextEdit, "small_text_edit")
             text_to_save_small_text_edit = small_text_edit.toPlainText()
+            text_to_save_new_text_edit_2 = new_text_edit_2.toPlainText()
 
             # Establish a database connection
             db_connection = mysql.connector.connect(
                 host="localhost",
                 user="root",
-                password="desmond1234",
+                password="steven1234",
                 database="tourism information kiosk"
             )
             cursor = db_connection.cursor()
 
             # Insert the data into the database (modify this as needed)
-            insert_data_sql = "INSERT INTO deals(deals_name, discount, promocode, attractions_id) VALUES (%s, %s, %s, %s)"
+            insert_data_sql = "INSERT INTO deals(deals_name, discount, deals_description, promocode, attractions_id) VALUES (%s, %s, %s, %s, %s)"
             data_params = (
-                text_to_save_text_edit2, text_to_save_text_edit_3, text_to_save_text_edit_4,
-                text_to_save_small_text_edit)
+                text_to_save_text_edit2, text_to_save_small_text_edit, text_to_save_text_edit_3,
+                text_to_save_text_edit_4,
+                text_to_save_new_text_edit_2
+            )
             cursor.execute(insert_data_sql, data_params)
 
             # Get the last inserted attractions_id
             deals_id = cursor.lastrowid
 
             # Insert the image data into the image table
-            image_label = self.stackedWidget.currentWidget().findChild(QtWidgets.QLabel, "image_label")
+            image_label = new_frame.findChild(QtWidgets.QLabel, "image_label")
             image_pixmap = image_label.pixmap()  # Get the QPixmap from the QLabel
 
             # Convert QPixmap to bytes
@@ -265,7 +263,7 @@ class Ui_MainWindow(object):
             # Convert QByteArray to Python bytearray
             image_data = bytes(image_byte_array)
 
-            insert_image_sql = "INSERT INTO image (image_name, deals_id, image_data) VALUES (%s, %s, %s)"
+            insert_image_sql = "INSERT INTO image (image_name, deals_id, image_data, image_type) VALUES (%s, %s, %s, 'Main')"
             image_params = (text_to_save_text_edit2, deals_id, image_data)
             cursor.execute(insert_image_sql, image_params)
 
@@ -292,14 +290,15 @@ class Ui_MainWindow(object):
             connection = mysql.connector.connect(
                 host="localhost",
                 user="root",
-                password="desmond1234",
+                password="steven1234",
                 database="tourism information kiosk"
             )
             cursor = connection.cursor()
             cursor.execute("""
-                SELECT d.deals_id, deals_name,d.deals_description,d.discount, d.promocode, d.attractions_id, i.image_data
-            FROM deals AS d
-            LEFT JOIN image AS i ON d.deals_id = i.deals_id
+                SELECT d.deals_id, deals_name, d.deals_description, d.discount, d.promocode, d.attractions_id, i.image_data
+                FROM deals AS d
+                LEFT JOIN image AS i ON d.deals_id = i.deals_id
+                WHERE i.image_type = 'Main'
             """)
             data = cursor.fetchall()
             cursor.close()
@@ -318,17 +317,21 @@ class Ui_MainWindow(object):
             for index, (
                     deals_id, deals_name, deals_description, discount, promocode, attractions_id,
                     image_data) in enumerate(data):
+                font = QFont()
+                font.setPointSize(12)  # Adjust the font size as needed
+                font.setFamily("Arial")
 
                 newframe = QtWidgets.QFrame(self.scrollAreaWidgetContents_3)
-                newframe.setFixedSize(1200, 500)  # Adjust the size of the new frame
+                newframe.setFixedSize(1190, 500)  # Adjust the size of the new frame
                 newframe.setFrameShape(QtWidgets.QFrame.Box)
                 newframe.setFrameShadow(QtWidgets.QFrame.Raised)
                 newframe.setObjectName("newframe")
                 # Add the new frame to the vertical layout inside the deals page (scroll area) at the top
                 self.verticalLayout_6.insertWidget(0, newframe)  # Insert at the beginning of the layout
                 imagelabel = QLabel(newframe)
-                imagelabel.setGeometry(QtCore.QRect(20, 20, 400, 500))  # Adjust the position and size as needed
+                imagelabel.setGeometry(QtCore.QRect(20, 20, 400, 470))  # Adjust the position and size as needed
                 imagelabel.setObjectName("imagelabel")
+                imagelabel.setFrameShape(QtWidgets.QFrame.Box)
                 # Convert binary image_data to QImage
                 image = QImage()
                 image.loadFromData(image_data)  # Load image from binary data
@@ -339,47 +342,79 @@ class Ui_MainWindow(object):
                 imagelabel.setScaledContents(True)
                 imagelabel.setAlignment(QtCore.Qt.AlignCenter)
 
-                textedit2 = QtWidgets.QTextEdit(newframe)
-                textedit2.setGeometry(
-                    QtCore.QRect(600, 20, 600, 50))  # Position the first text edit to the right of the label
-                textedit2.setPlainText(deals_name)  # Set the text for text_edit2
-                textedit2.setObjectName("textedit2")
-                textedit2.setReadOnly(True)  # Assuming text_edit2 is for displaying data
+                namelabel = QtWidgets.QLabel(newframe)
+                namelabel.setGeometry(QtCore.QRect(615, 15, 200, 20))  # Adjusted position
+                namelabel.setObjectName("namelabel")
+                namelabel.setText("Name:")
+
+                self.textedit2 = QtWidgets.QTextEdit(newframe)
+                self.textedit2.setGeometry(QtCore.QRect(610, 40, 400, 50))  # Position the first text edit to the right of the label
+                self.textedit2.setPlainText(deals_name)  # Set the text for text_edit2
+                self.textedit2.setObjectName("textedit2")
+                self.textedit2.setFrameShape(QtWidgets.QFrame.Panel)
+                self.textedit2.setFrameShadow(QtWidgets.QFrame.Raised)
+                self.textedit2.setReadOnly(True)  # Assuming text_edit2 is for displaying data
 
                 inputframe_3 = QtWidgets.QFrame(newframe)
-                inputframe_3.setGeometry(QtCore.QRect(600, 80, 600, 250))  # Adjust the position and size as needed
-                inputframe_3.setFrameShape(QtWidgets.QFrame.Box)
-                inputframe_3.setFrameShadow(QtWidgets.QFrame.Raised)
+                inputframe_3.setGeometry(QtCore.QRect(600, 135, 588, 150))  # Adjust the position and size as needed
                 inputframe_3.setObjectName("input_frame_3")
 
-                textedit_3 = QtWidgets.QTextEdit(inputframe_3)
-                textedit_3.setGeometry(QtCore.QRect(10, 10, 580, 200))  # Adjust the position and size
-                textedit_3.setPlainText(
-                    deals_description)  # Convert discount to string and set the text for text_edit_3
-                textedit_3.setObjectName("textedit_3")
-                textedit_3.setReadOnly(True)  # Assuming text_edit_3 is for displaying data
+                dealsdescription_label = QtWidgets.QLabel(newframe)
+                dealsdescription_label.setGeometry(QtCore.QRect(615, 120, 200, 20))  # Adjusted position
+                dealsdescription_label.setObjectName("dealsdescription_label")
+                dealsdescription_label.setText("Deals description:")
+
+                self.textedit_3 = QtWidgets.QTextEdit(inputframe_3)
+                self.textedit_3.setGeometry(QtCore.QRect(10, 10, 570, 120))  # Adjust the position and size
+                self.textedit_3.setPlainText(deals_description)  # Convert discount to string and set the text for text_edit_3
+                self.textedit_3.setObjectName("textedit_3")
+                self.textedit_3.setFrameShape(QtWidgets.QFrame.Panel)
+                self.textedit_3.setFrameShadow(QtWidgets.QFrame.Raised)
+                self.textedit_3.setReadOnly(True)  # Assuming text_edit_3 is for displaying data
 
                 inputframe_4 = QtWidgets.QFrame(newframe)
-                inputframe_4.setGeometry(QtCore.QRect(600, 300, 600, 200))  # Adjust the position and size as needed
-                inputframe_4.setFrameShape(QtWidgets.QFrame.Box)
-                inputframe_4.setFrameShadow(QtWidgets.QFrame.Raised)
+                inputframe_4.setGeometry(QtCore.QRect(600, 310, 588, 180))  # Adjust the position and size as needed
                 inputframe_4.setObjectName("inputframe_4")
 
-                textedit_4 = QtWidgets.QTextEdit(inputframe_4)
-                textedit_4.setGeometry(QtCore.QRect(10, 10, 580, 100))  # Adjust the position and size
-                textedit_4.setPlainText(promocode)  # Set the text for text_edit_4
-                textedit_4.setObjectName("textedit_4")
-                textedit_4.setReadOnly(True)  # Assuming text_edit_4 is for displaying data
+                promocode_label = QtWidgets.QLabel(newframe)
+                promocode_label.setGeometry(QtCore.QRect(615, 290, 200, 20))  # Adjusted position
+                promocode_label.setObjectName("promocode_label")
+                promocode_label.setText("Promocode:")
 
-                newtext_edit = QtWidgets.QTextEdit(newframe)
-                newtext_edit.setGeometry(QtCore.QRect(450, 100, 150, 50))  # Set the geometry as specified
-                newtext_edit.setPlainText(str(deals_id))  # Convert deals_id to string and set the initial text
-                newtext_edit.setObjectName("newtext_edit")
+                self.textedit_4 = QtWidgets.QTextEdit(inputframe_4)
+                self.textedit_4.setGeometry(QtCore.QRect(10, 10, 570, 170))  # Adjust the position and size
+                self.textedit_4.setPlainText(promocode)  # Set the text for text_edit_4
+                self.textedit_4.setObjectName("textedit_4")
+                self.textedit_4.setFrameShape(QtWidgets.QFrame.Panel)
+                self.textedit_4.setFrameShadow(QtWidgets.QFrame.Raised)
+                self.textedit_4.setReadOnly(True)  # Assuming text_edit_4 is for displaying data
 
-                new_text_edit_2 = QtWidgets.QTextEdit(newframe)
-                new_text_edit_2.setGeometry(QtCore.QRect(450, 160, 150, 50))  # Set the geometry as desired
-                new_text_edit_2.setPlainText(str(attractions_id))  # Set the initial text (you can change this)
-                new_text_edit_2.setObjectName("new_text_edit_2")  # Give it a unique object name
+                dealsid_label = QtWidgets.QLabel(newframe)
+                dealsid_label.setGeometry(QtCore.QRect(450, 150, 95, 50))  # Adjusted position
+                dealsid_label.setObjectName("dealsid_label")
+                dealsid_label.setText("Deals id:")
+
+                self.newtext_edit = QtWidgets.QTextEdit(newframe)
+                self.newtext_edit.setGeometry(QtCore.QRect(550, 160, 30, 30))  # Set the geometry as specified
+                self.newtext_edit.setPlainText(str(deals_id))  # Convert deals_id to string and set the initial text
+                self.newtext_edit.setObjectName("newtext_edit")
+                self.newtext_edit.setFrameShape(QtWidgets.QFrame.Panel)
+                self.newtext_edit.setFrameShadow(QtWidgets.QFrame.Raised)
+
+
+                attractions_id_label = QtWidgets.QLabel(newframe)
+                attractions_id_label.setGeometry(QtCore.QRect(450, 100, 95, 50))  # Adjusted position
+                attractions_id_label.setObjectName("attractions_id_label")
+                attractions_id_label.setText("Attraction id:")
+
+
+                self.new_text_edit_2 = QtWidgets.QTextEdit(newframe)
+                self.new_text_edit_2.setGeometry(QtCore.QRect(550, 113, 30, 30))  # Set the geometry as desired
+                self.new_text_edit_2.setPlainText(str(attractions_id))  # Set the initial text (you can change this)
+                self.new_text_edit_2.setObjectName("new_text_edit_2")  # Give it a unique object name
+                self.new_text_edit_2.setFrameShape(QtWidgets.QFrame.Panel)
+                self.new_text_edit_2.setFrameShadow(QtWidgets.QFrame.Raised)
+
 
                 edit_button = QPushButton("Edit", newframe)
                 edit_button.setGeometry(QtCore.QRect(450, 20, 150, 30))
@@ -395,42 +430,46 @@ class Ui_MainWindow(object):
                     if edit_button.text() == "Edit":
                         edit_button.setText("Save")
                         # Enable input widgets for editing
-                        textedit2.setReadOnly(False)
-                        textedit_3.setReadOnly(False)
-                        textedit_4.setReadOnly(False)
-                        smalltext_edit.setReadOnly(False)
-                        newtext_edit.setReadOnly(False)
-                        new_text_edit_2.setReadOnly(False)
+                        self.textedit2.setReadOnly(False)
+                        self.textedit_3.setReadOnly(False)
+                        self.textedit_4.setReadOnly(False)
+                        self.smalltext_edit.setReadOnly(False)
+                        self.newtext_edit.setReadOnly(False)
+                        self.new_text_edit_2.setReadOnly(False)
                         upload_button.setVisible(True)
                     elif edit_button.text() == "Save":
                         edit_button.setText("Edit")
                         # Disable input widgets after saving
-                        textedit2.setReadOnly(True)
-                        textedit_3.setReadOnly(True)
-                        textedit_4.setReadOnly(True)
-                        smalltext_edit.setReadOnly(True)
-                        new_text_edit_2.setReadOnly(True)
+                        self.textedit2.setReadOnly(True)
+                        self.textedit_3.setReadOnly(True)
+                        self.textedit_4.setReadOnly(True)
+                        self.smalltext_edit.setReadOnly(True)
+                        self.new_text_edit_2.setReadOnly(True)
                         upload_button.setVisible(False)
                         # Get updated data from widgets
-                        deals_name = textedit2.toPlainText()
-                        deals_description = textedit_3.toPlainText()
-                        promocode = textedit_4.toPlainText()
-                        discount = smalltext_edit.toPlainText()
-                        attractions_id = int(new_text_edit_2.toPlainText())
+                        deals_name = self.textedit2.toPlainText()
+                        deals_description = self.textedit_3.toPlainText()
+                        promocode = self.textedit_4.toPlainText()
+                        discount = self.smalltext_edit.toPlainText()
+                        attractions_id = int(self.new_text_edit_2.toPlainText())
                         update_deals_to_database(deals_id, deals_name, deals_description, promocode, discount,
                                                  attractions_id)
                         update_image_in_database(deals_id, image_data)
 
                 edit_button.clicked.connect(toggle_edit_save)
 
-                smalltext_edit = QtWidgets.QTextEdit(newframe)
-                smalltext_edit.setGeometry(
-                    QtCore.QRect(textedit2.x() + textedit2.width() - 104, textedit2.y(), 104,
-                                 51))  # Adjust the height as needed
-                smalltext_edit.setPlainText(
-                    str(discount))  # Convert attractions_id to string and set the text for the small text edit
-                smalltext_edit.setObjectName("smalltext_edit")
-                smalltext_edit.setReadOnly(True)  # Assuming small_text_edit is for displaying data
+                discount_label = QtWidgets.QLabel(newframe)
+                discount_label.setGeometry(QtCore.QRect(1050, 15, 130, 20))  # Adjusted position
+                discount_label.setObjectName("discount_label")
+                discount_label.setText("Discount:")
+
+                self.smalltext_edit = QtWidgets.QTextEdit(newframe)
+                self.smalltext_edit.setGeometry(QtCore.QRect(1050, 40, 130, 50))  # Adjust the height as needed
+                self.smalltext_edit.setPlainText(str(discount))  # Convert attractions_id to string and set the text for the small text edit
+                self.smalltext_edit.setObjectName("smalltext_edit")
+                self.smalltext_edit.setFrameShape(QtWidgets.QFrame.Panel)
+                self.smalltext_edit.setFrameShadow(QtWidgets.QFrame.Raised)
+                self.smalltext_edit.setReadOnly(True)  # Assuming small_text_edit is for displaying data
 
                 # Create a "Clear" button for clearing the frame
                 clear_button = QPushButton("Clear", newframe)
@@ -438,6 +477,47 @@ class Ui_MainWindow(object):
                 clear_button.clicked.connect(
                     lambda _, frame=newframe, deals_id=deals_id, attractions_id=None: self.clear_frame(frame, deals_id,
                                                                                                        attractions_id))
+                namelabel.setFont(font)
+
+                # Set the font for textedit2
+                self.textedit2.setFont(font)
+                clear_button.setFont(font)
+
+                # Set the font for dealsdescription_label
+                dealsdescription_label.setFont(font)
+
+                # Set the font for textedit_3
+                self.textedit_3.setFont(font)
+
+                # Set the font for promocode_label
+                promocode_label.setFont(font)
+
+                # Set the font for textedit_4
+                self.textedit_4.setFont(font)
+
+                # Set the font for dealsid_label
+                dealsid_label.setFont(font)
+
+                # Set the font for newtext_edit
+                self.newtext_edit.setFont(font)
+
+                # Set the font for attractions_id_label
+                attractions_id_label.setFont(font)
+
+                # Set the font for new_text_edit_2
+                self.new_text_edit_2.setFont(font)
+
+                # Set the font for edit_button
+                edit_button.setFont(font)
+
+                # Set the font for upload_button
+                upload_button.setFont(font)
+
+                # Set the font for discount_label
+                discount_label.setFont(font)
+
+                # Set the font for smalltext_edit
+                self.smalltext_edit.setFont(font)
 
                 # Create an "Upload" button for updating the image
                 upload_button.clicked.connect(lambda _, frame=newframe: self.deals_upload_image(frame, deals_id))
@@ -475,7 +555,7 @@ class Ui_MainWindow(object):
     def add_new_frame_to_dealspage(self):
         # Create a new frame
         new_frame = QtWidgets.QFrame(self.scrollAreaWidgetContents_3)
-        new_frame.setFixedSize(1200, 500)  # Set the size of the new frame
+        new_frame.setFixedSize(1190, 500)  # Set the size of the new frame
         new_frame.setFrameShape(QtWidgets.QFrame.Box)
         new_frame.setFrameShadow(QtWidgets.QFrame.Raised)
         new_frame.setObjectName("new_frame")
@@ -484,42 +564,55 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.insertWidget(0, new_frame)
 
         image_label = QLabel(new_frame)
-        image_label.setGeometry(QtCore.QRect(20, 20, 400, 500))  # Adjust the position and size as needed
+        image_label.setGeometry(QtCore.QRect(20, 20, 400, 470))  # Adjust the position and size as needed
         image_label.setObjectName("image_label")
+        image_label.setFrameShape(QtWidgets.QFrame.Box)
 
         # Create a button for uploading an image
         upload_button = QPushButton("Upload Image", new_frame)
         upload_button.setGeometry(QtCore.QRect(450, 20, 150, 30))  # Adjust the button position and size
         upload_button.setObjectName("upload_button")
 
-        # Create a button to clear the frame
-        clear_button = QPushButton("Clear", new_frame)
-        clear_button.setGeometry(QtCore.QRect(450, 60, 150, 30))  # Adjust the button position and size
-        clear_button.setObjectName("clear_button")
+        namelabel = QtWidgets.QLabel(new_frame)
+        namelabel.setGeometry(QtCore.QRect(615, 15, 200, 20))  # Adjusted position
+        namelabel.setObjectName("namelabel")
+        namelabel.setText("Name:")
+        promocode_label = QtWidgets.QLabel(new_frame)
+        promocode_label.setGeometry(QtCore.QRect(615, 290, 200, 20))  # Adjusted position
+        promocode_label.setObjectName("promocode_label")
+        promocode_label.setText("Promocode:")
+        dealsid_label = QtWidgets.QLabel(new_frame)
+        dealsid_label.setGeometry(QtCore.QRect(450, 150, 95, 50))  # Adjusted position
+        dealsid_label.setObjectName("dealsid_label")
+        dealsid_label.setText("Deals id:")
+        attractions_id_label = QtWidgets.QLabel(new_frame)
+        attractions_id_label.setGeometry(QtCore.QRect(450, 100, 95, 50))  # Adjusted position
+        attractions_id_label.setObjectName("attractions_id_label")
+        attractions_id_label.setText("Attraction id:")
+        discount_label = QtWidgets.QLabel(new_frame)
+        discount_label.setGeometry(QtCore.QRect(1055, 15, 130, 20))  # Adjusted position
+        discount_label.setObjectName("discount_label")
+        discount_label.setText("Discount:")
 
         # Create a new QTextEdit widget
         new_text_edit = QtWidgets.QTextEdit(new_frame)
-        new_text_edit.setGeometry(QtCore.QRect(450, 100, 150, 50))  # Set the geometry as specified
-        new_text_edit.setPlainText("New Text Here")  # Set the initial text (you can change this)
+        new_text_edit.setGeometry(QtCore.QRect(550, 160, 30, 30))  # Set the geometry as specified
         new_text_edit.setObjectName("new_text_edit")  # Give it a unique object name
+        new_text_edit.setFrameShape(QtWidgets.QFrame.Panel)
+        new_text_edit.setFrameShadow(QtWidgets.QFrame.Raised)
+        dealsdescription_label = QtWidgets.QLabel(new_frame)
+        dealsdescription_label.setGeometry(QtCore.QRect(615, 110, 200, 20))  # Adjusted position
+        dealsdescription_label.setObjectName("dealsdescription_label")
+        dealsdescription_label.setText("Deals description:")
 
         new_text_edit_2 = QtWidgets.QTextEdit(new_frame)
-        new_text_edit_2.setGeometry(QtCore.QRect(450, 160, 150, 50))  # Set the geometry as desired
-        new_text_edit_2.setPlainText("New Text Here 2")  # Set the initial text (you can change this)
+        new_text_edit_2.setGeometry(QtCore.QRect(550, 113, 30, 30))  # Set the geometry as desired
         new_text_edit_2.setObjectName("new_text_edit_2")  # Give it a unique object name
-
-        # Optionally, configure the new QTextEdit as needed.
-        new_text_edit_2.setFrameShape(QtWidgets.QFrame.NoFrame)
-        # Remove the frame for the new QTextEdit
-        new_text_edit.setFrameShape(QtWidgets.QFrame.NoFrame)
+        new_text_edit_2.setFrameShape(QtWidgets.QFrame.Panel)
+        new_text_edit_2.setFrameShadow(QtWidgets.QFrame.Raised)
 
         # Connect the upload button to the function that allows image upload
         upload_button.clicked.connect(lambda: self.open_image_dialog(image_label))
-
-        clear_button.clicked.connect(
-            lambda _, frame=new_frame, deals_id=deals_id, attractions_id=attractions_id: self.clear_frame(frame,
-                                                                                                          deals_id,
-                                                                                                          attractions_id))
 
         # Optionally, configure the QLabel as needed.
         image_label.setScaledContents(True)
@@ -527,79 +620,73 @@ class Ui_MainWindow(object):
 
         # Add a QTextEdit widget to the new frame (text_edit2 remains the same)
         text_edit2 = QtWidgets.QTextEdit(new_frame)
-        text_edit2.setGeometry(
-            QtCore.QRect(600, 20, 600, 50))  # Position the first text edit to the right of the label
-        text_edit2.setPlainText("Your Text Here 2")  # Set the text for the first text edit
+        text_edit2.setGeometry(QtCore.QRect(610, 40, 400, 50))  # Position the first text edit to the right of the label
+        text_edit2.setPlaceholderText("Deals Name")  # Set the text for the first text edit
         text_edit2.setObjectName("text_edit2")
-
-        # Set font for text_edit2
-        font_text_edit2 = QtGui.QFont()
-        font_text_edit2.setPointSize(12)  # Set the point size to 12
-        font_text_edit2.setBold(True)  # Set the font to bold
-        text_edit2.setFont(font_text_edit2)
+        text_edit2.setFrameShape(QtWidgets.QFrame.Panel)
+        text_edit2.setFrameShadow(QtWidgets.QFrame.Raised)
 
         input_frame_3 = QtWidgets.QFrame(new_frame)
-        input_frame_3.setGeometry(QtCore.QRect(600, 80, 600, 250))  # Adjust the position and size as needed
-        input_frame_3.setFrameShape(QtWidgets.QFrame.Box)
-        input_frame_3.setFrameShadow(QtWidgets.QFrame.Raised)
+        input_frame_3.setGeometry(QtCore.QRect(600, 135, 588, 150))  # Adjust the position and size as needed
         input_frame_3.setObjectName("input_frame_3")
 
         # Create a QTextEdit for input text 3
         text_edit_3 = QtWidgets.QTextEdit(input_frame_3)
-        text_edit_3.setGeometry(QtCore.QRect(10, 10, 580, 200))  # Adjust the position and size
-        text_edit_3.setPlainText("Your Text Here 3")  # Set the initial text
+        text_edit_3.setGeometry(QtCore.QRect(10, 10, 570, 120))  # Adjust the position and size
+        text_edit_3.setPlaceholderText("Deals description")  # Set the initial text
         text_edit_3.setObjectName("text_edit_3")
         text_edit_3.setFrameShape(QtWidgets.QFrame.Panel)
         text_edit_3.setFrameShadow(QtWidgets.QFrame.Raised)
 
-        # Set font for text_edit_3
-        font_text_edit_3 = QtGui.QFont()
-        font_text_edit_3.setPointSize(11)  # Set the point size to 11
-        text_edit_3.setFont(font_text_edit_3)
-
         input_frame_4 = QtWidgets.QFrame(new_frame)
-        input_frame_4.setGeometry(QtCore.QRect(600, 300, 600, 200))  # Adjust the position and size as needed
-        input_frame_4.setFrameShape(QtWidgets.QFrame.Box)
-        input_frame_4.setFrameShadow(QtWidgets.QFrame.Raised)
+        input_frame_4.setGeometry(QtCore.QRect(600, 310, 588, 180))  # Adjust the position and size as needed
         input_frame_4.setObjectName("input_frame_4")
 
         # Create a QTextEdit for input text 4
         text_edit_4 = QtWidgets.QTextEdit(input_frame_4)
-        text_edit_4.setGeometry(QtCore.QRect(10, 10, 580, 100))  # Adjust the position and size
-        text_edit_4.setPlainText("Your Text Here 4")  # Set the initial text
+        text_edit_4.setGeometry(QtCore.QRect(10, 10, 570, 170))  # Adjust the position and size
+        text_edit_4.setPlaceholderText("Promocode")  # Set the initial text
         text_edit_4.setObjectName("text_edit_4")
         text_edit_4.setFrameShape(QtWidgets.QFrame.Panel)
         text_edit_4.setFrameShadow(QtWidgets.QFrame.Raised)
 
-        # Set font for text_edit_4
-        font_text_edit_4 = QtGui.QFont()
-        font_text_edit_4.setPointSize(11)  # Set the point size to 11
-        text_edit_4.setFont(font_text_edit_4)
-
-        # Set a frame shadow for text_edit2
-        text_edit2.setFrameShape(QtWidgets.QFrame.Panel)
-        text_edit2.setFrameShadow(QtWidgets.QFrame.Raised)
-
         # Add a small QTextEdit to the new frame (top-right side of text_edit2)
         small_text_edit = QtWidgets.QTextEdit(new_frame)
-        small_text_edit.setGeometry(
-            QtCore.QRect(text_edit2.x() + text_edit2.width() - 104, text_edit2.y(), 104,
-                         51))  # Adjust the height as needed
-        small_text_edit.setPlainText("Small Text Here")  # Set the text for the small text edit
+        small_text_edit.setGeometry(QtCore.QRect(1050, 40, 130, 50))  # Adjust the height as needed
+        small_text_edit.setPlaceholderText("Discount amount")  # Set the text for the small text edit
         small_text_edit.setObjectName("small_text_edit")
+        small_text_edit.setObjectName("smalltext_edit")
+        small_text_edit.setFrameShape(QtWidgets.QFrame.Panel)
+        small_text_edit.setFrameShadow(QtWidgets.QFrame.Raised)
+        font = QFont()
+        font.setPointSize(12)  # Adjust the font size as needed
+        font.setFamily("Arial")  # Adjust the font family as needed
+        # Set the font for labels
+        namelabel.setFont(font)
+        promocode_label.setFont(font)
+        dealsid_label.setFont(font)
+        attractions_id_label.setFont(font)
+        discount_label.setFont(font)
+        dealsdescription_label.setFont(font)
 
-        # Set font for small_text_edit
-        font_small_text_edit = QtGui.QFont()
-        font_small_text_edit.setPointSize(12)  # Set the point size to 12
-        font_small_text_edit.setBold(True)  # Make the font bold
-        small_text_edit.setFont(font_small_text_edit)
+        # Set the font for QTextEdit widgets
+        text_edit2.setFont(font)
+        new_text_edit.setFont(font)
+        new_text_edit_2.setFont(font)
+        text_edit_3.setFont(font)
+        text_edit_4.setFont(font)
+        small_text_edit.setFont(font)
+
+        # Set the font for QPushButton
+        upload_button.setFont(font)
 
         # Optionally, configure the text edit (text_edit2), small text edit, and label as needed.
         text_edit2.setReadOnly(False)
         small_text_edit.setReadOnly(False)
-        self.save_deals_button.clicked.connect(lambda: self.save_data_from_frame_to_database(new_frame))
+        self.save_deals_button.clicked.connect(lambda: self.save_data_from_frame_to_database(
+            new_frame, text_edit2, text_edit_3, text_edit_4, small_text_edit, new_text_edit_2))
 
-    def save_attractions_data_from_frame_to_database(self, new_frame):
+    def save_attractions_data_from_frame_database(self, new_frame, additional_image_paths=None):
         try:
             # Get the text from text_edit2
             text_edit2 = new_frame.findChild(QtWidgets.QTextEdit, "text_edit2")
@@ -625,7 +712,7 @@ class Ui_MainWindow(object):
             db_connection = mysql.connector.connect(
                 host="localhost",
                 user="root",
-                password="desmond1234",
+                password="steven1234",
                 database="tourism information kiosk"
             )
             cursor = db_connection.cursor()
@@ -641,27 +728,30 @@ class Ui_MainWindow(object):
                 category_id)
             cursor.execute(insert_attractions_sql, attractions_params)
 
-            # Get the last inserted attractions_id
             attractions_id = cursor.lastrowid
 
+            # Save main image
             image_label = self.stackedWidget.currentWidget().findChild(QtWidgets.QLabel, "image_label")
-            image_pixmap = image_label.pixmap()  # Get the QPixmap from the QLabel
+            image_pixmap = image_label.pixmap()
 
-            # Convert QPixmap to bytes
             image_byte_array = QtCore.QByteArray()
             buffer = QtCore.QBuffer(image_byte_array)
             buffer.open(QtCore.QIODevice.WriteOnly)
-            image_pixmap.save(buffer, "PNG")  # You can change the format as needed
+            image_pixmap.save(buffer, "PNG")
 
-            # Convert QByteArray to Python bytearray
             image_data = bytes(image_byte_array)
 
-            insert_image_sql = "INSERT INTO image (image_name, attractions_id, image_data) VALUES (%s, %s, %s)"
+            insert_image_sql = "INSERT INTO image (image_name, attractions_id, image_data, image_type) VALUES (%s, %s, %s, 'Main')"
             image_params = (text_to_save_text_edit2, attractions_id, image_data)
             cursor.execute(insert_image_sql, image_params)
 
-            db_connection.commit()
+            # Save additional images
+            if additional_image_paths:
+                for additional_image_path in additional_image_paths:
+                    # Call the function to save additional image data
+                    self.save_additional_image_to_database(attractions_id, additional_image_path, cursor)
 
+            db_connection.commit()
             db_connection.close()
 
             # Optionally, show a message to indicate that the data has been saved
@@ -669,6 +759,41 @@ class Ui_MainWindow(object):
         except Exception as e:
             # Handle any exceptions that might occur, e.g., database connection issues
             QtWidgets.QMessageBox.critical(None, "Error", f"An error occurred: {str(e)}")
+
+    def save_additional_image_to_database(self, attractions_id, additional_image_path, cursor):
+        try:
+            # Read the additional image data
+            with open(additional_image_path, "rb") as image_file:
+                additional_image_data = image_file.read()
+
+            # Insert the data into the image table with a different image_type
+            insert_image_sql = "INSERT INTO image (image_name, attractions_id, image_data, image_type) VALUES (%s, %s, %s, 'Details')"
+            image_params = (os.path.basename(additional_image_path), attractions_id, additional_image_data)
+            cursor.execute(insert_image_sql, image_params)
+
+            # Optionally, show a message to indicate that the additional image has been saved
+            QtWidgets.QMessageBox.information(None, "Information", "Additional image has been saved to the database.")
+        except Exception as e:
+            # Handle any exceptions that might occur, e.g., database connection issues
+            QtWidgets.QMessageBox.critical(None, "Error", f"An error occurred: {str(e)}")
+
+    def additional_button_clicked(self, new_frame, image_name, image_names):
+        # Open a file dialog to select multiple additional images
+        file_dialog = QFileDialog()
+        file_dialog.setNameFilter("Image Files (*.png *.jpg *.bmp)")
+        file_dialog.setViewMode(QFileDialog.Detail)
+        file_dialog.setFileMode(QFileDialog.ExistingFiles)
+
+        if file_dialog.exec_():
+            selected_files = file_dialog.selectedFiles()
+            if selected_files:
+                # Append the image names to the list
+                image_names.extend(selected_files)
+                # Update the image_name QTextEdit
+                image_name.setPlainText("\n\n".join(image_names))
+
+                # Save all additional images to the database
+                self.save_attractions_data_from_frame_database(new_frame, additional_image_paths=selected_files)
 
     def display_attractions_data(self):
         # Clear existing widgets in the layout
@@ -690,7 +815,7 @@ class Ui_MainWindow(object):
                         category_name) in enumerate(data):
 
                     new_frame = QtWidgets.QFrame(self.scrollAreaWidgetContents_2)
-                    new_frame.setFixedSize(1200, 500)
+                    new_frame.setFixedSize(1190, 500)
                     new_frame.setFrameShape(QtWidgets.QFrame.Box)
                     new_frame.setFrameShadow(QtWidgets.QFrame.Raised)
                     new_frame.setObjectName("new_frame")
@@ -699,8 +824,9 @@ class Ui_MainWindow(object):
                     self.verticalLayout_10.insertWidget(0, new_frame)
 
                     imagelabel = QLabel(new_frame)
-                    imagelabel.setGeometry(QtCore.QRect(20, 20, 400, 500))
+                    imagelabel.setGeometry(QtCore.QRect(20, 20, 400, 470))
                     imagelabel.setObjectName("imagelabel")
+                    imagelabel.setFrameShape(QtWidgets.QFrame.Box)
 
                     input_widget = QtWidgets.QComboBox(new_frame)
                     input_widget.setObjectName("input_widget")
@@ -729,51 +855,81 @@ class Ui_MainWindow(object):
                     imagelabel.setAlignment(QtCore.Qt.AlignCenter)
 
                     # Set text for your other widgets (labels, text edits, etc.)
+                    name_label = QtWidgets.QLabel(new_frame)
+                    name_label.setGeometry(QtCore.QRect(615, 15, 200, 20))  # Adjusted position
+                    name_label.setObjectName("name_label")
+                    name_label.setText("Name:")
+
                     textedit2 = QtWidgets.QTextEdit(new_frame)
-                    textedit2.setGeometry(QtCore.QRect(600, 20, 600, 50))
+                    textedit2.setGeometry(QtCore.QRect(610, 40, 400, 50))
                     textedit2.setPlainText(attractions_name)
                     textedit2.setObjectName("textedit2")
+                    textedit2.setFrameShape(QtWidgets.QFrame.Panel)
+                    textedit2.setFrameShadow(QtWidgets.QFrame.Raised)
                     textedit2.setReadOnly(True)
 
                     # Create a new frame for input text (frame 3)
                     input_frame_3 = QtWidgets.QFrame(new_frame)
-                    input_frame_3.setGeometry(QtCore.QRect(600, 80, 600, 250))
+                    input_frame_3.setGeometry(QtCore.QRect(600, 135, 588, 150))
+
+                    address_label = QtWidgets.QLabel(new_frame)
+                    address_label.setGeometry(QtCore.QRect(615, 120, 200, 20))  # Adjusted position
+                    address_label.setObjectName("address_label")
+                    address_label.setText("Address:")
 
                     # Create a QTextEdit for input text 3
                     textedit_3 = QtWidgets.QTextEdit(input_frame_3)
-                    textedit_3.setGeometry(QtCore.QRect(10, 10, 580, 200))
+                    textedit_3.setGeometry(QtCore.QRect(10, 10, 570, 120))
                     textedit_3.setPlainText(str(attractions_price))
                     textedit_3.setObjectName("textedit_3")
                     textedit_3.setFrameShape(QtWidgets.QFrame.Panel)
                     textedit_3.setFrameShadow(QtWidgets.QFrame.Raised)
+                    textedit_3.setReadOnly(True)
 
                     # Create a new frame for input text (frame 4)
                     input_frame_4 = QtWidgets.QFrame(new_frame)
-                    input_frame_4.setGeometry(QtCore.QRect(600, 300, 600, 200))
+                    input_frame_4.setGeometry(QtCore.QRect(600, 310, 588, 180))
 
                     # Create a new QTextEdit for the new input field without a frame
+                    attractions_id_label = QtWidgets.QLabel(new_frame)
+                    attractions_id_label.setGeometry(QtCore.QRect(450, 100, 95, 50))  # Adjusted position
+                    attractions_id_label.setObjectName("attractions_id_label")
+                    attractions_id_label.setText("Attraction id:")
+
                     newtext_edit = QtWidgets.QTextEdit(new_frame)
-                    newtext_edit.setGeometry(QtCore.QRect(450, 100, 150, 50))
+                    newtext_edit.setGeometry(QtCore.QRect(550, 113, 30, 30))
                     newtext_edit.setPlainText(str(attractions_id))
                     newtext_edit.setObjectName("newtext_edit")
-                    newtext_edit.setFrameShape(QtWidgets.QFrame.NoFrame)
+                    newtext_edit.setFrameShape(QtWidgets.QFrame.Panel)
+                    newtext_edit.setFrameShadow(QtWidgets.QFrame.Raised)
+                    newtext_edit.setReadOnly(True)
 
+                    description_label = QtWidgets.QLabel(new_frame)
+                    description_label.setGeometry(QtCore.QRect(615, 290, 200, 20))  # Adjusted position
+                    description_label.setObjectName("description_label")
+                    description_label.setText("Description:")
                     # Create a QTextEdit for input text 4
                     textedit_4 = QtWidgets.QTextEdit(input_frame_4)
-                    textedit_4.setGeometry(QtCore.QRect(10, 10, 580, 100))
+                    textedit_4.setGeometry(QtCore.QRect(10, 10, 570, 170))
                     textedit_4.setPlainText(attractions_address)
                     textedit_4.setObjectName("text_edit_4")
                     textedit_4.setFrameShape(QtWidgets.QFrame.Panel)
                     textedit_4.setFrameShadow(QtWidgets.QFrame.Raised)
+                    textedit_4.setReadOnly(True)
 
                     # Add a small QTextEdit to the new frame (top-right side of text_edit2)
+                    price_label = QtWidgets.QLabel(new_frame)
+                    price_label.setGeometry(QtCore.QRect(1050, 15, 130, 20))  # Adjusted position
+                    price_label.setObjectName("name_label")
+                    price_label.setText("Price(RM):")
+
                     smalltext_edit = QtWidgets.QTextEdit(new_frame)
-                    smalltext_edit.setGeometry(
-                        QtCore.QRect(textedit2.x() + textedit2.width() - 104, textedit2.y(), 104, 51))
+                    smalltext_edit.setGeometry(QtCore.QRect(1050, 40, 130, 50))
                     smalltext_edit.setPlainText(str(description))
                     smalltext_edit.setObjectName("small_text_edit")
                     smalltext_edit.setFrameShape(QtWidgets.QFrame.Panel)
                     smalltext_edit.setFrameShadow(QtWidgets.QFrame.Raised)
+                    smalltext_edit.setReadOnly(True)
 
                     # Store attractions_id as an attribute of the new_frame
                     new_frame.attractions_id = attractions_id
@@ -808,6 +964,32 @@ class Ui_MainWindow(object):
                     upload_button.setObjectName("upload_button")
                     upload_button.setText("Upload")
                     upload_button.setVisible(False)
+                    font = QFont()
+                    font.setPointSize(12)  # Adjust the font size as needed
+                    font.setFamily("Arial")  # Adjust the font family as needed
+
+                    # ...
+
+                    # Set the font for labels
+                    name_label.setFont(font)
+                    address_label.setFont(font)
+                    attractions_id_label.setFont(font)
+                    description_label.setFont(font)
+                    price_label.setFont(font)
+                    input_widget.setFont(font)
+
+                    # Set the font for QTextEdit widgets
+                    textedit2.setFont(font)
+                    newtext_edit.setFont(font)
+                    textedit_3.setFont(font)
+                    textedit_4.setFont(font)
+                    newtext_edit.setFont(font)
+                    smalltext_edit.setFont(font)
+
+                    # Set the font for QPushButton
+                    clear_button.setFont(font)
+                    edit_button.setFont(font)
+                    upload_button.setFont(font)
 
                     # Optionally, connect the upload_button_clicked signal if needed
                     upload_button.clicked.connect(
@@ -880,7 +1062,6 @@ class Ui_MainWindow(object):
         # Remove the widgets from the frame
         for widget in frame.findChildren(QtWidgets.QWidget):
             widget.deleteLater()
-
         # Call your method to delete data from the database
         self.delete_deals_data_from_database(deals_id)
         self.delete_attractions_data_from_database(attractions_id)
@@ -895,9 +1076,13 @@ class Ui_MainWindow(object):
         if db_connection:
             cursor = db_connection.cursor()
 
-            delete_attractions_query = "DELETE FROM image WHERE deals_id = %s"
-            cursor.execute(delete_attractions_query, (deals_id,))
-
+            # Delete booking details associated with the given deals_id
+            delete_booking_details_query = "DELETE FROM booking_details WHERE deals_id = %s"
+            cursor.execute(delete_booking_details_query, (deals_id,))
+            # Delete image data associated with the given deals_id (assuming it's related to booking_details)
+            delete_image_query = "DELETE FROM image WHERE deals_id = %s"
+            cursor.execute(delete_image_query, (deals_id,))
+            # Delete deals data based on deals_id
             delete_deals_query = "DELETE FROM deals WHERE deals_id = %s"
             cursor.execute(delete_deals_query, (deals_id,))
 
@@ -937,7 +1122,7 @@ class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1308, 718)
+        MainWindow.resize(1330, 720)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -1021,19 +1206,12 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.setSpacing(50)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.attraction_btn_2 = QtWidgets.QPushButton(self.full_menu_widget)
-        font = QtGui.QFont()
-        font.setFamily("Arial Rounded MT Bold")
-        font.setPointSize(8)
-        self.attraction_btn_2.setFont(font)
         self.attraction_btn_2.setIconSize(QtCore.QSize(20, 20))
         self.attraction_btn_2.setCheckable(True)
         self.attraction_btn_2.setAutoExclusive(True)
         self.attraction_btn_2.setObjectName("attraction_btn_2")
         self.verticalLayout_2.addWidget(self.attraction_btn_2)
         self.deal_btn_2 = QtWidgets.QPushButton(self.full_menu_widget)
-        font = QtGui.QFont()
-        font.setFamily("Arial Rounded MT Bold")
-        self.deal_btn_2.setFont(font)
         self.deal_btn_2.setCheckable(True)
         self.deal_btn_2.setAutoExclusive(True)
         self.deal_btn_2.setObjectName("deal_btn_2")
@@ -1115,12 +1293,13 @@ class Ui_MainWindow(object):
         self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
         self.verticalLayout_10 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents_2)
         self.verticalLayout_10.setObjectName("verticalLayout_10")
-        self.frame_7 = QtWidgets.QFrame(self.scrollAreaWidgetContents_2)
-        self.frame_7.setMinimumSize(QtCore.QSize(1200, 3600))
-        self.frame_7.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_7.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_7.setObjectName("frame_7")
-        self.verticalLayout_10.addWidget(self.frame_7)
+        self.firstpage = QtWidgets.QLabel(self.scrollAreaWidgetContents_2)
+        font = QtGui.QFont()
+        font.setPointSize(30)
+        self.firstpage.setFont(font)
+        self.firstpage.setAlignment(QtCore.Qt.AlignCenter)
+        self.firstpage.setObjectName("firstpage")
+        self.verticalLayout_10.addWidget(self.firstpage)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents_2)
         self.gridLayout_9.addWidget(self.scrollArea, 0, 0, 1, 1)
         self.stackedWidget.addWidget(self.page_8)
@@ -1169,7 +1348,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
-        self.stackedWidget.setCurrentIndex(2)
+        self.stackedWidget.setCurrentIndex(0)
         self.change_btn.toggled['bool'].connect(self.icon_only_widget.setVisible)  # type: ignore
         self.change_btn.toggled['bool'].connect(self.full_menu_widget.setHidden)  # type: ignore
         self.exit_btn_2.clicked.connect(MainWindow.close)  # type: ignore
@@ -1202,6 +1381,19 @@ class Ui_MainWindow(object):
         self.save_deals_button.setText(_translate("MainWindow", "SAVE DEALS"))
         self.add_attraction_button.setText(_translate("MainWindow", "ADD ATTRACTION"))
         self.save_attraction_button.setText(_translate("MainWindow", "SAVE ATTRACTION"))
+        font = QFont()
+        font.setPointSize(12)  # Adjust the font size as needed
+        font.setFamily("Arial")  # Adjust the font family as needed
+
+        # Set the font for buttons
+        self.attraction_btn_2.setFont(font)
+        self.deal_btn_2.setFont(font)
+        self.exit_btn_2.setFont(font)
+        self.add_deals_button.setFont(font)
+        self.save_deals_button.setFont(font)
+        self.add_attraction_button.setFont(font)
+        self.save_attraction_button.setFont(font)
+        self.firstpage.setText(_translate("MainWindow", "Welcome to Admin Page !"))
 
         # Add these methods to your Ui_MainWindow class
         def show_attraction_page():
@@ -1219,7 +1411,7 @@ class Ui_MainWindow(object):
 
         def add_new_frame():
             new_frame = QtWidgets.QFrame(self.scrollAreaWidgetContents_2)
-            new_frame.setFixedSize(1200, 500)  # Set the size of the new frame
+            new_frame.setFixedSize(1190, 500)  # Set the size of the new frame
             new_frame.setFrameShape(QtWidgets.QFrame.Box)
             new_frame.setFrameShadow(QtWidgets.QFrame.Raised)
             new_frame.setObjectName("new_frame")
@@ -1228,54 +1420,61 @@ class Ui_MainWindow(object):
             self.verticalLayout_10.insertWidget(0, new_frame)
 
             image_label = QLabel(new_frame)
-            image_label.setGeometry(QtCore.QRect(20, 20, 400, 500))  # Adjust the position and size as needed
+            image_label.setGeometry(QtCore.QRect(20, 20, 400, 470))  # Adjust the position and size as needed
             image_label.setObjectName("image_label")
+            image_label.setFrameShape(QtWidgets.QFrame.Box)
 
             # Create a button for uploading an image
             upload_button = QPushButton("Upload Image", new_frame)
             upload_button.setGeometry(QtCore.QRect(450, 20, 150, 30))  # Adjust the button position and size
             upload_button.setObjectName("upload_button")
 
-            # Add the second QTextEdit to the new frame
-            text_edit2 = QtWidgets.QTextEdit(new_frame)
-            text_edit2.setGeometry(QtCore.QRect(600, 20, 600, 50))  # Position the second text edit below the first one
-            text_edit2.setPlainText("Your Text Here 22")  # Set the text for the second text edit
-            text_edit2.setObjectName("text_edit2")
+            additional_button = QPushButton("Additional Image", new_frame)
+            additional_button.setGeometry(QtCore.QRect(450, 200, 150, 30))
+            additional_button.setObjectName("additional_button")
 
-            # Set font for text_edit2
-            font_text_edit2 = QtGui.QFont()
-            font_text_edit2.setFamily("MS Shell Dlg 2")
-            font_text_edit2.setPointSize(12)
-            font_text_edit2.setBold(True)  # Set the font to bold
-            text_edit2.setFont(font_text_edit2)
+            image_names = []
+            image_name = QtWidgets.QTextEdit(new_frame)
+            image_name.setGeometry(QtCore.QRect(450, 250, 150, 200))  # Set the geometry as specified
+            image_name.setPlaceholderText("Image path")  # Set the initial text (you can change this)
+            image_name.setObjectName("image_name")
+            image_name.setFrameShape(QtWidgets.QFrame.NoFrame)
+            # Connect the "Additional Button" to a function if needed
+            # Connect the "Additional Button" to the additional_button_clicked function
+            additional_button.clicked.connect(
+                lambda: self.additional_button_clicked(new_frame, image_name, image_names))
+
+            # Add the second QTextEdit to the new frame
+            name_label = QtWidgets.QLabel(new_frame)
+            name_label.setGeometry(QtCore.QRect(615, 15, 200, 20))  # Adjusted position
+            name_label.setObjectName("name_label")
+            name_label.setText("Name:")
+
+            text_edit2 = QtWidgets.QTextEdit(new_frame)
+            text_edit2.setGeometry(QtCore.QRect(610, 40, 400, 50))  # Position the second text edit below the first one
+            text_edit2.setPlaceholderText("Attraction name")  # Set the text for the second text edit
+            text_edit2.setObjectName("text_edit2")
 
             # Create a new frame for input text (frame 3)
             input_frame_3 = QtWidgets.QFrame(new_frame)
-            input_frame_3.setGeometry(QtCore.QRect(600, 80, 600, 250))  # Adjust the position and size as needed
-            input_frame_3.setFrameShape(QtWidgets.QFrame.Box)
-            input_frame_3.setFrameShadow(QtWidgets.QFrame.Raised)
-            input_frame_3.setObjectName("input_frame_3")
+            input_frame_3.setGeometry(QtCore.QRect(600, 135, 588, 150))
+
+            address_label = QtWidgets.QLabel(new_frame)
+            address_label.setGeometry(QtCore.QRect(615, 120, 200, 20))  # Adjusted position
+            address_label.setObjectName("address_label")
+            address_label.setText("Address:")
 
             # Create a QTextEdit for input text 3
             text_edit_3 = QtWidgets.QTextEdit(input_frame_3)
-            text_edit_3.setGeometry(QtCore.QRect(10, 10, 580, 200))  # Adjust the position and size
-            text_edit_3.setPlainText("Your Text Here 3")  # Set the initial text
+            text_edit_3.setGeometry(QtCore.QRect(10, 10, 570, 120))  # Adjust the position and size
+            text_edit_3.setPlaceholderText("Attraction address")  # Set the initial text
             text_edit_3.setObjectName("text_edit_3")
             text_edit_3.setFrameShape(QtWidgets.QFrame.Panel)
             text_edit_3.setFrameShadow(QtWidgets.QFrame.Raised)
 
-            # Set font for text_edit_3
-            font_text_edit_3 = QtGui.QFont()
-            font_text_edit_3.setFamily("MS Shell Dlg 2")
-            font_text_edit_3.setPointSize(11)  # Adjust the point size as needed
-            text_edit_3.setFont(font_text_edit_3)
-
             # Create a new frame for input text (frame 4)
             input_frame_4 = QtWidgets.QFrame(new_frame)
-            input_frame_4.setGeometry(QtCore.QRect(600, 300, 600, 200))  # Adjust the position and size as needed
-            input_frame_4.setFrameShape(QtWidgets.QFrame.Box)
-            input_frame_4.setFrameShadow(QtWidgets.QFrame.Raised)
-            input_frame_4.setObjectName("input_frame_4")
+            input_frame_4.setGeometry(QtCore.QRect(600, 310, 588, 180))
 
             input_widget = QtWidgets.QComboBox(new_frame)
             input_widget.setEditable(True)
@@ -1290,20 +1489,26 @@ class Ui_MainWindow(object):
 
             if options:
                 input_widget.setCurrentText(option)
-
+            attractions_id_label = QtWidgets.QLabel(new_frame)
+            attractions_id_label.setGeometry(QtCore.QRect(450, 100, 95, 50))  # Adjusted position
+            attractions_id_label.setObjectName("attractions_id_label")
+            attractions_id_label.setText("Attraction id:")
             # Create a new QTextEdit for the new input field without a frame
             new_text_edit = QtWidgets.QTextEdit(new_frame)
-            new_text_edit.setGeometry(QtCore.QRect(450, 100, 150, 50))  # Set the geometry as specified
-            new_text_edit.setPlainText("New Text Here")  # Set the initial text (you can change this)
+            new_text_edit.setGeometry(QtCore.QRect(550, 113, 30, 30))  # Set the geometry as specified
+            new_text_edit.setPlaceholderText("id")  # Set the initial text (you can change this)
             new_text_edit.setObjectName("new_text_edit")  # Give it a unique object name
-
             # Remove the frame for the new QTextEdit
-            new_text_edit.setFrameShape(QtWidgets.QFrame.NoFrame)
+
+            description_label = QtWidgets.QLabel(new_frame)
+            description_label.setGeometry(QtCore.QRect(615, 290, 200, 20))  # Adjusted position
+            description_label.setObjectName("description_label")
+            description_label.setText("Description:")
 
             # Create a QTextEdit for input text 4
             text_edit_4 = QtWidgets.QTextEdit(input_frame_4)
-            text_edit_4.setGeometry(QtCore.QRect(10, 10, 580, 100))  # Adjust the position and size
-            text_edit_4.setPlainText("Your Text Here 4")  # Set the initial text
+            text_edit_4.setGeometry(QtCore.QRect(10, 10, 570, 170))  # Adjust the position and size
+            text_edit_4.setPlaceholderText("Description")  # Set the initial text
             text_edit_4.setObjectName("text_edit_4")
             text_edit_4.setFrameShape(QtWidgets.QFrame.Panel)
             text_edit_4.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -1311,42 +1516,53 @@ class Ui_MainWindow(object):
             text_edit2.setFrameShape(QtWidgets.QFrame.Panel)
             text_edit2.setFrameShadow(QtWidgets.QFrame.Raised)
 
-            # Set font for text_edit_4
-            font_text_edit_4 = QtGui.QFont()
-            font_text_edit_4.setFamily("MS Shell Dlg 2")
-            font_text_edit_4.setPointSize(11)  # Adjust the point size as needed
-            text_edit_4.setFont(font_text_edit_4)
+            price_label = QtWidgets.QLabel(new_frame)
+            price_label.setGeometry(QtCore.QRect(1050, 15, 130, 20))  # Adjusted position
+            price_label.setObjectName("name_label")
+            price_label.setText("Price(RM):")
 
             # Add a small QTextEdit to the new frame (top-right side of text_edit2)
             small_text_edit = QtWidgets.QTextEdit(new_frame)
             small_text_edit.setGeometry(
-                QtCore.QRect(text_edit2.x() + text_edit2.width() - 104, text_edit2.y(), 104, 51))
-            small_text_edit.setPlainText("Small Text")
+                QtCore.QRect(1050, 40, 130, 50))
+            small_text_edit.setPlaceholderText("Price")
             small_text_edit.setObjectName("small_text_edit")
-
-            # Set font for small_text_edit
-            font_small_text_edit = QtGui.QFont()
-            font_small_text_edit.setFamily("MS Shell Dlg 2")
-            font_small_text_edit.setPointSize(12)  # Adjust the point size as needed
-            font_small_text_edit.setBold(True)  # Make the font bold
-            small_text_edit.setFont(font_small_text_edit)
-
-            # Create a "Clear" button for clearing the frame
-            clear_button = QPushButton("Clear", new_frame)
-            clear_button.setGeometry(QtCore.QRect(450, 60, 150, 30))  # Adjust the button position and size
+            small_text_edit.setFrameShape(QtWidgets.QFrame.Panel)
+            small_text_edit.setFrameShadow(QtWidgets.QFrame.Raised)
 
             upload_button.clicked.connect(lambda: self.open_image_dialog(image_label))
-            # Connect the "Clear" button to the function for clearing the frame
-            clear_button.clicked.connect(lambda: self.clear_frame(new_frame, attractions_id, deals_id))
+            font = QFont()
+            font.setPointSize(12)  # Adjust the font size as needed
+            font.setFamily("Arial")  # Adjust the font family as needed
+
+            # Set the font for labels
+            name_label.setFont(font)
+            address_label.setFont(font)
+            attractions_id_label.setFont(font)
+            description_label.setFont(font)
+            price_label.setFont(font)
+
+            # Set the font for QTextEdit widgets
+            text_edit2.setFont(font)
+            new_text_edit.setFont(font)
+            text_edit_3.setFont(font)
+            text_edit_4.setFont(font)
+            small_text_edit.setFont(font)
+
+            # Set the font for QComboBox widget
+            input_widget.setFont(font)
+
+            # Set the font for QPushButtons
+            upload_button.setFont(font)
+            additional_button.setFont(font)
             # Optionally, configure the QLabel as needed.
             image_label.setScaledContents(True)
             image_label.setAlignment(QtCore.Qt.AlignCenter)
             # Set a frame shadow for the small_text_edit (raised shadow)
-            small_text_edit.setFrameShape(QtWidgets.QFrame.Panel)
-            small_text_edit.setFrameShadow(QtWidgets.QFrame.Raised)
+
             # Connect the save button to the save function
             self.save_attraction_button.clicked.connect(
-                lambda: self.save_attractions_data_from_frame_to_database(new_frame))
+                lambda: self.save_attractions_data_from_frame_database(new_frame))
 
             # Connect the "ADD" button to the function
 
@@ -1360,6 +1576,7 @@ if __name__ == "__main__":
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
+    app.setFont(common_font)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
