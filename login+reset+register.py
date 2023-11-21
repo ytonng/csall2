@@ -3,7 +3,7 @@ import hashlib
 import test_rc,re
 from PyQt5 import QtCore, QtGui, QtWidgets
 from side_bar_ui import MainWindow
-from admin_ui_desmond import Ui_MainWindow as admin_Ui_MainWindow
+from admin_ui import Ui_MainWindow as admin_Ui_MainWindow
 
 def connect_to_database():
     try:
