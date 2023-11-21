@@ -761,7 +761,7 @@ class ForgetPasswordWindow(QtWidgets.QMainWindow):
 
         # Load credentials from the client_secret.json file
         flow = InstalledAppFlow.from_client_secrets_file(
-            r"C:\Users\s\Downloads\client_secret_379816141851-frjap9raqtnjcn5t8t97v51vmum6te8e.apps.googleusercontent.com.json",
+            r"C:\Users\s\Downloads\client_secret_726592906241-3rvo3eu9fjd2mc68acnrebtebn1ftrhd.apps.googleusercontent.com.json",
             SCOPES)
 
         # Run the OAuth flow
@@ -791,7 +791,7 @@ class ForgetPasswordWindow(QtWidgets.QMainWindow):
 
         # Example usage:
 
-        send_verification_email('usermapping1@gmail.com', 'Password Reset')
+        send_verification_email(email, 'Password Reset')
         # Implement code to send a verification code to the provided email address
         # You can add logic to handle successful or failed sending of the code.
 

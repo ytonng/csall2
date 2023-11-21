@@ -15,7 +15,7 @@ from datetime import datetime
 common_font = QFont("Arial", 12)
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, user_id=7):
+    def __init__(self, user_id=9):
         super(MainWindow, self).__init__()
         self.user_id = user_id
         self.ui = Ui_MainWindow(self, user_id)
@@ -914,7 +914,7 @@ class Ui_MainWindow(object):
             db_connection = mysql.connector.connect(
                 host="localhost",
                 user="root",
-                password="steven1234",
+                password="shoutaaoi4968",
                 database="tourism information kiosk"
             )
             cursor = db_connection.cursor()
@@ -925,6 +925,7 @@ class Ui_MainWindow(object):
             FROM attractions AS a
             LEFT JOIN image AS i ON a.attractions_id = i.attractions_id
             LEFT JOIN category AS c ON a.category_id = c.category_id
+            WHERE i.image_type='Details'
             """
 
             # Add WHERE clauses to filter based on search_query and selected_category
@@ -1599,7 +1600,7 @@ class Ui_MainWindow(object):
             lambda: self.save_booking_data(self.user_id, attractions_name, check_in_date.date().toString(), comboBox,
                                            promocode_entry))
         booking_btn.clicked.connect(
-            lambda: self.send_email(attractions_name, check_in_date.date().toString(), comboBox))
+            lambda: self.send_email(self.user_id,attractions_name, check_in_date.date().toString(), comboBox))
 
         # Set the QTextEdit fields as read-only
         booking_description_2.setReadOnly(True)
@@ -1817,11 +1818,37 @@ class Ui_MainWindow(object):
         index_of_scrollArea_2 = self.MainWindow.ui.stackedWidget.indexOf(self.scrollArea_2)
         self.MainWindow.ui.stackedWidget.setCurrentIndex(index_of_scrollArea_2)
 
-    def send_email(self, hotel_name, check_in_date, comboBox):
+    def get_email_from_user_id(self, user_id):
+        # Replace these values with your actual MySQL connection details
+        # Connect to the MySQL database
+        db_connection = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="steven1234",
+            database="tourism information kiosk"
+        )
+        cursor = db_connection.cursor()
+
+        # Assuming there is a table named 'users' with columns 'user_id' and 'email'
+        query = "SELECT email FROM user WHERE user_id = %s"
+        cursor.execute(query, (user_id,))
+        result = cursor.fetchone()
+
+        cursor.close()
+        db_connection.close()
+
+        if result:
+            return result[0]  # Assuming email is the first column in the result
+        else:
+            return None  # Handle the case where user_id is not found
+
+    def send_email(self,user_id,hotel_name, check_in_date, comboBox):
+        user_email = self.get_email_from_user_id(user_id)
+
         # Load credentials from the client_secret.json file
         SCOPES = ['https://www.googleapis.com/auth/gmail.send']
         flow = InstalledAppFlow.from_client_secrets_file(
-            r"C:\Users\s\Downloads\client_secret_379816141851-frjap9raqtnjcn5t8t97v51vmum6te8e.apps.googleusercontent.com.json",
+            r"C:\Users\s\Downloads\client_secret_726592906241-3rvo3eu9fjd2mc68acnrebtebn1ftrhd.apps.googleusercontent.com.json",
             SCOPES)
 
         # Run the OAuth flow
@@ -1850,7 +1877,7 @@ class Ui_MainWindow(object):
                        f'Number of Ticket: {number_of_tickets}\n' \
                        f'We look forward to hosting you.'
 
-        send_message(service, 'me', create_message('me', 'usermapping1@gmail.com', subject, message_text))
+        send_message(service, 'me', create_message('me', user_email, subject, message_text))
 
     def show_checkin_calendar_2(self, event):
         # Calculate the position to display the check-in calendar
