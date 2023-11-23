@@ -842,7 +842,7 @@ class Ui_MainWindow(object):
         db_connection = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="steven1234",
+            password="shoutaaoi4968",
             database="tourism information kiosk"
         )
         cursor = db_connection.cursor()
@@ -885,7 +885,7 @@ class Ui_MainWindow(object):
             db_connection = mysql.connector.connect(
                 host="localhost",
                 user="root",
-                password="steven1234",
+                password="shoutaaoi4968",
                 database="tourism information kiosk"
             )
             cursor = db_connection.cursor()
@@ -925,7 +925,6 @@ class Ui_MainWindow(object):
             FROM attractions AS a
             LEFT JOIN image AS i ON a.attractions_id = i.attractions_id
             LEFT JOIN category AS c ON a.category_id = c.category_id
-            WHERE i.image_type='Details'
             """
 
             # Add WHERE clauses to filter based on search_query and selected_category
@@ -958,7 +957,7 @@ class Ui_MainWindow(object):
         db_connection = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="steven1234",
+            password="shoutaaoi4968",
             database="tourism information kiosk"
         )
 
@@ -1137,7 +1136,7 @@ class Ui_MainWindow(object):
             db_connection = mysql.connector.connect(
                 host="localhost",
                 user="root",
-                password="steven1234",
+                password="shoutaaoi4968",
                 database="tourism information kiosk"
             )
             cursor = db_connection.cursor()
@@ -1250,7 +1249,7 @@ class Ui_MainWindow(object):
         db_connection = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="steven1234",
+            password="shoutaaoi4968",
             database="tourism information kiosk"
         )
         cursor = db_connection.cursor()
@@ -1302,7 +1301,7 @@ class Ui_MainWindow(object):
             db_connection = mysql.connector.connect(
                 host="localhost",
                 user="root",
-                password="steven1234",
+                password="shoutaaoi4968",
                 database="tourism information kiosk"
             )
             cursor = db_connection.cursor()
@@ -1330,7 +1329,7 @@ class Ui_MainWindow(object):
             db_connection = mysql.connector.connect(
                 host="localhost",
                 user="root",
-                password="steven1234",
+                password="shoutaaoi4968",
                 database="tourism information kiosk"
             )
             cursor = db_connection.cursor()
@@ -1647,7 +1646,7 @@ class Ui_MainWindow(object):
             db_connection = mysql.connector.connect(
                 host="localhost",
                 user="root",
-                password="steven1234",
+                password="shoutaaoi4968",
                 database="tourism information kiosk"
             )
             cursor = db_connection.cursor()
@@ -1680,7 +1679,7 @@ class Ui_MainWindow(object):
             db_connection = mysql.connector.connect(
                 host="localhost",
                 user="root",
-                password="steven1234",
+                password="shoutaaoi4968",
                 database="tourism information kiosk"
             )
             cursor = db_connection.cursor()
@@ -1824,7 +1823,7 @@ class Ui_MainWindow(object):
         db_connection = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="steven1234",
+            password="shoutaaoi4968",
             database="tourism information kiosk"
         )
         cursor = db_connection.cursor()
@@ -1927,7 +1926,7 @@ class Ui_MainWindow(object):
             db_connection = mysql.connector.connect(
                 host="localhost",
                 user="root",
-                password="steven1234",
+                password="shoutaaoi4968",
                 database="tourism information kiosk"
             )
 
