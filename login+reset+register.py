@@ -10,7 +10,7 @@ def connect_to_database():
         db_connection = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="steven1234",
+            password="shoutaaoi4968",
             database="tourism information kiosk"
         )
         return db_connection
@@ -587,7 +587,7 @@ class LoginWindow(QtWidgets.QMainWindow):
         db_connection = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="steven1234",
+            password="shoutaaoi4968",
             database="tourism information kiosk"
         )
 
@@ -761,7 +761,7 @@ class ForgetPasswordWindow(QtWidgets.QMainWindow):
 
         # Load credentials from the client_secret.json file
         flow = InstalledAppFlow.from_client_secrets_file(
-            r"C:\Users\s\Downloads\client_secret_726592906241-3rvo3eu9fjd2mc68acnrebtebn1ftrhd.apps.googleusercontent.com.json",
+            r"C:\Users\See Jia Wei\OneDrive\Documents\Tourism Kiosk\client_secret_726592906241-3rvo3eu9fjd2mc68acnrebtebn1ftrhd.apps.googleusercontent.com.json",
             SCOPES)
 
         # Run the OAuth flow
@@ -813,7 +813,7 @@ class ForgetPasswordWindow(QtWidgets.QMainWindow):
                 db_connection = mysql.connector.connect(
                     host="localhost",
                     user="root",
-                    password="steven1234",
+                    password="shoutaaoi4968",
                     database="tourism information kiosk"
                 )
 
